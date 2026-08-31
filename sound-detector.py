@@ -10,7 +10,7 @@ import requests
 import sounddevice as sd
 
 # Sound Detector Script
-# v1.07.5
+# v1.07.6
 
 load_dotenv()
 FIRST_DISCORD_WEBHOOK_URL = os.getenv("NOTIFY_USER_URL")
@@ -32,11 +32,17 @@ def time_report():
     """
     Reports the current time of NYC/America.
     """
+
     now = datetime.now(nyc_tz)
     return now.strftime("%d/%m/%Y %H:%M:%S")
 
 
 def find_audio_device():
+    """
+    Finds the currently selected output device the user is using
+    to detect device audio.
+    """
+
     try:
         devices = sd.query_devices()
     except Exception:
@@ -65,6 +71,10 @@ last_ping_time = 0
 
 
 def auto_delete_msg(webhook_url, msg_id, delay):
+    """
+    Auto-deletes the Webhook Bot's Discord message(s) in "delay" seconds.
+    """
+
     if not webhook_url or not msg_id:
         return
     time.sleep(delay)
@@ -73,6 +83,11 @@ def auto_delete_msg(webhook_url, msg_id, delay):
 
 
 def send_discord_ping(text):
+    """
+    Send a Discord mention to the User ID to their connected webhook, 
+    notifying them about a detected sound's presence.
+    """
+
     if not FIRST_DISCORD_WEBHOOK_URL:
         return
 
@@ -98,6 +113,10 @@ def send_discord_ping(text):
 
 
 def send_volume_report(volume):
+    """
+    Send a message to another connected webhook, displaying the Live Volume output.
+    """
+
     if not SECOND_DISCORD_WEBHOOK_URL:
         return
 
@@ -126,6 +145,12 @@ def send_volume_report(volume):
 
 
 def audio_callback(indata, frames, time_info, status):
+    """Processes the device audio, monitor volume levels, and report spikes.
+
+    Sends a Discord notification if live volume exceeds the threshold and the
+    cooldown period has elapsed.
+    """
+
     global last_ping_time
 
     volume_norm = float(np.sqrt(np.mean(indata**2)))
