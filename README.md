@@ -13,11 +13,12 @@ Successful Discord pings display America/New_York Time and the Volume Distance o
 and will have a cooldown of 5 seconds before the Discord user can be pinged again.  
 
 Messages from the Webhook Bot will automatically be deleted  
-after 30 seconds unless the Terminal session ends early.  
+after 60 seconds unless the Terminal session ends early.  
 
 *OPTIONAL:*  
 In the other URL, your live volume detection will be shown in the channel it is connected to.  
 If the Live Volume is above SOUND_THRESHOLD, it's volume will be in Bold & Italic.  
+The live volume messages will be deleted after 20 seconds.  
 
 This bot is great at knowing if a special sound cue occurred while  
 you were idling on a video game, or if you're deaf or whatever and need this for accessibility.  
