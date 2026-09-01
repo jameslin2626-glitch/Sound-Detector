@@ -1,7 +1,7 @@
 # Sound Notification Bot (`sound-detector.py`)
 
 Sound Detector Script  
-v1.07.6 
+v1.07.6  
 
 Sound Notification Bot is a bot that is connected to a Discord Webhook URL.  
 
@@ -32,7 +32,7 @@ To use this script and connect to Discord, follow the instructions here:
 * Create new Webhook(s)  
 * Copy the Webhook URL(s) and put it inside your .env file along with your Discord User ID(s)  
 
-If you want to get your Discord User ID, go to settings, enable Developer Mode,  
+If you want to get your Discord User ID(s), go to settings, enable Developer Mode,  
 right-click your name after sending a message, and click on Copy User ID.  
 
 ## Audio Device Setup
@@ -66,23 +66,24 @@ is a lot smoother and way easier to set up.
 
 ## Package Installation
 
-The script uses 4 third-party Python packages to function correctly.  
+The script uses 5 third-party Python packages to function correctly.  
 You need to install the following third-party Python packages:  
 * requests  
 * numpy  
 * sounddevice  
 * python-dotenv  
+* pytz
 
 Run this command in your Terminal:  
-* pip install numpy requests sounddevice python-dotenv
+* pip install numpy requests sounddevice python-dotenv pytz  
 
 On macOS / Linux, standard system Python often requires pip3 instead of pip. If you hit an  
 externally-managed-environment error, use a virtual environment, or run this command in your Terminal:  
-* python3 -m pip install numpy requests sounddevice python-dotenv  
+* python3 -m pip install numpy requests sounddevice python-dotenv pytz  
 
 If you use Windows, and run into permission errors when installing globally,  
 open Command Prompt as Administrator, or run this command in your Terminal:  
-* py -m pip install numpy requests sounddevice python-dotenv  
+* py -m pip install numpy requests sounddevice python-dotenv pytz  
 
 OPTIONAL:
 * pip install -r requirements.txt
@@ -155,6 +156,7 @@ requests==2.34.2
 numpy==2.5.2  
 sounddevice==0.5.6  
 python-dotenv==1.2.3  
+pytz==2026.3.post1  
 
 Red: 0xFF0000  
 Green: 0x57F287  

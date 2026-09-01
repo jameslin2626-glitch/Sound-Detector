@@ -2,15 +2,13 @@ import os
 import sys
 import threading
 import time
+import pytz
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 import numpy as np
-import requests
 import sounddevice as sd
-
-# Sound Detector Script
-# v1.07.6
+import requests
 
 load_dotenv()
 FIRST_DISCORD_WEBHOOK_URL = os.getenv("NOTIFY_USER_URL")
@@ -25,16 +23,46 @@ HERTZ_RATE = 44100
 NOISE_THRESHOLD = 0.1
 NOISE_FLOOR = 0.01
 
-nyc_tz = ZoneInfo("America/New_York")
+current_date_nyc_tz = ZoneInfo("America/New_York")
+current_time_nyc_tz = pytz.timezone("America/New_York")
+
+
+def date_report():
+    """
+    Reports the current date of NYC/America in 12-hour format.
+    """
+    now = datetime.now(current_date_nyc_tz)
+
+    hour = now.hour
+    meridiem = "AM"
+
+    if hour >= 12:
+        meridiem = "PM"
+        if hour > 12:
+            hour -= 12
+    elif hour == 0:
+        hour = 12
+
+    return f"{now.strftime("%d/%m/%Y")} {hour}:{now.strftime("%M:%S")}{meridiem}"
 
 
 def time_report():
     """
-    Reports the current time of NYC/America.
+    Reports the current time of NYC/America in 12-hour format.
     """
+    now = datetime.now(current_time_nyc_tz)
 
-    now = datetime.now(nyc_tz)
-    return now.strftime("%d/%m/%Y %H:%M:%S")
+    hour = now.hour
+    meridiem = "AM"
+
+    if hour >= 12:
+        meridiem = "PM"
+        if hour > 12:
+            hour -= 12
+    elif hour == 0:
+        hour = 12
+
+    return f"{hour}:{now.strftime('%M:%S')} {meridiem}"
 
 
 def find_audio_device():
@@ -42,7 +70,6 @@ def find_audio_device():
     Finds the currently selected output device the user is using
     to detect device audio.
     """
-
     try:
         devices = sd.query_devices()
     except Exception:
@@ -74,7 +101,6 @@ def auto_delete_msg(webhook_url, msg_id, delay):
     """
     Auto-deletes the Webhook Bot's Discord message(s) in "delay" seconds.
     """
-
     if not webhook_url or not msg_id:
         return
     time.sleep(delay)
@@ -87,7 +113,6 @@ def send_discord_ping(text):
     Send a Discord mention to the User ID to their connected webhook, 
     notifying them about a detected sound's presence.
     """
-
     if not FIRST_DISCORD_WEBHOOK_URL:
         return
 
@@ -116,7 +141,6 @@ def send_volume_report(volume):
     """
     Send a message to another connected webhook, displaying the Live Volume output.
     """
-
     if not SECOND_DISCORD_WEBHOOK_URL:
         return
 
@@ -145,12 +169,12 @@ def send_volume_report(volume):
 
 
 def audio_callback(indata, frames, time_info, status):
-    """Processes the device audio, monitor volume levels, and report spikes.
+    """
+    Processes the device audio, monitor volume levels, and report spikes.
 
     Sends a Discord notification if live volume exceeds the threshold and the
     cooldown period has elapsed.
     """
-
     global last_ping_time
 
     volume_norm = float(np.sqrt(np.mean(indata**2)))
@@ -158,10 +182,10 @@ def audio_callback(indata, frames, time_info, status):
     if volume_norm > NOISE_FLOOR:
         print(f"Volume: {volume_norm:.3f}")
 
-        if not volume_norm > NOISE_THRESHOLD:
-            send_volume_report(f"{volume_norm:.3f}")
-        else:
+        if volume_norm > NOISE_THRESHOLD:
             send_volume_report(f"***{volume_norm:.3f}***")
+        else:
+            send_volume_report(f"{volume_norm:.3f}")
 
     current_time = time.time()
     if volume_norm > NOISE_THRESHOLD:
@@ -171,8 +195,7 @@ def audio_callback(indata, frames, time_info, status):
             delete_time = int(current_time) + NOTIF_AUTO_DELETE_DURATION
 
             send_discord_ping(
-                f"***A sound was detected!***\n"
-                f"TIME: {time_report()}\n"
+                f"[{date_report()}] ***A sound was detected!***\n"
                 f"Threshold: {NOISE_THRESHOLD}\n"
                 f"Live Volume: ***{volume_norm:.3f}***\n"
                 f"-# Deletes <t:{delete_time}:R>"
