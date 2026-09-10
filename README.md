@@ -1,7 +1,7 @@
 # Sound Notification Bot (`sound-detector.py`)
 
 Sound Detector Script  
-v1.07.6  
+v1.08.8
 
 Sound Notification Bot is a bot that is connected to a Discord Webhook URL.  
 
@@ -9,7 +9,7 @@ The bot detects for device audio that is above the SOUND_THRESHOLD (0.1).
 If it successfully detects audio that is above that, it will ping the user's Discord ID  
 in their Discord server in their selected webhook channel, alerting them of the sound's presence.  
 
-Successful Discord pings display America/New_York Time and the Volume Distance of which it detected,  
+Successful Discord pings display America/New_York Time in 12-hour format and the Volume Distance of which it detected,  
 and will have a cooldown of 5 seconds before the Discord user can be pinged again.  
 
 Messages from the Webhook Bot will automatically be deleted  

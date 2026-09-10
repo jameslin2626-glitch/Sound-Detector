@@ -27,9 +27,10 @@ current_date_nyc_tz = ZoneInfo("America/New_York")
 current_time_nyc_tz = pytz.timezone("America/New_York")
 
 
-def date_report():
+def date_report():  # DD/MM/YY
     """
     Reports the current date of NYC/America in 12-hour format.
+    MM/DD/YY
     """
     now = datetime.now(current_date_nyc_tz)
 
@@ -43,7 +44,7 @@ def date_report():
     elif hour == 0:
         hour = 12
 
-    return f"{now.strftime("%d/%m/%Y")} {hour}:{now.strftime("%M:%S")}{meridiem}"
+    return f"{now.strftime("%d-%m-%Y")} {hour}:{now.strftime("%M:%S")}{meridiem}"
 
 
 def time_report():
