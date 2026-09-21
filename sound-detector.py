@@ -30,7 +30,7 @@ current_time_nyc_tz = pytz.timezone("America/New_York")
 def date_report():  # DD/MM/YY
     """
     Reports the current date of NYC/America in 12-hour format.
-    MM/DD/YY
+    DD/MM/YY
     """
     now = datetime.now(current_date_nyc_tz)
 
@@ -196,7 +196,8 @@ def audio_callback(indata, frames, time_info, status):
             delete_time = int(current_time) + NOTIF_AUTO_DELETE_DURATION
 
             send_discord_ping(
-                f"[{date_report()}] ***A sound was detected!***\n"
+                f"[{date_report()}]\n"
+                "***A sound was detected!***\n"
                 f"Threshold: {NOISE_THRESHOLD}\n"
                 f"Live Volume: ***{volume_norm:.3f}***\n"
                 f"-# Deletes <t:{delete_time}:R>"
