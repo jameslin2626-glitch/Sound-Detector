@@ -205,7 +205,7 @@ def audio_callback(indata, frames, time_info, status):
             last_ping_time = current_time
 
 
-print(f"Listening for device audio on device index {DEVICE_INDEX}...")
+print(f"Listening for device audio on device index {DEVICE_INDEX}...", flush=True)
 with sd.InputStream(
     device=DEVICE_INDEX,
     callback=audio_callback,
@@ -214,3 +214,4 @@ with sd.InputStream(
 ):
     while True:
         time.sleep(1)
+ 
