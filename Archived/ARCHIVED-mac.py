@@ -9,11 +9,10 @@ import requests
 import sounddevice as sd
 
 WEBHOOK_URL = (
-    "https://discord.com/api/webhooks/1539420219993493636/"
-    "GgqACo9Setrna1dep7Vb9M-taeVjr-GOl-BwELFxjf7ET4iQqDJXOjOT76qYZn920_KL"
-)
+    "https:/Vjr-GOl-BwELFxjf7ET4iQqDJXOjOT76qYZn920_KL"
+)#stop it
 
-USER_ID = "960332050836115466"
+USER_ID = ""
 
 # Sound File Definitions & Thresholds
 SOUNDS = {

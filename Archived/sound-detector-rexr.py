@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 # v2.6.2-alpha
 
 load_dotenv()
-DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+DISCORD_WEBHOOK_URL = os.getenv("NOTIFY_USER_URL")
 FIRST_USER_ID = os.getenv("FIRST_USER_ID")
 SECOND_USER_ID = os.getenv("SECOND_USER_ID")
 THIRD_USER_ID = os.getenv("THIRD_USER_ID")

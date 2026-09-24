@@ -9,12 +9,11 @@ import requests
 import sounddevice as sd
 
 WEBHOOK_URL = (
-    "https://discord.com/api/webhooks/1539420219993493636/"
-    "GgqACo9Setrna1dep7Vb9M-taeVjr-GOl-BwELFxjf7ET4iQqDJXOjOT76qYZn920_KL"
-)
+    "f7ET4iQqDJXOjOT76qYZn920_KL"
+) #we're not using thois anymore go away
 
-USER_ID = "755241231046410417"
-SECOND_USER_ID = "1499240877497909319"
+USER_ID = ""
+SECOND_USER_ID = ""
 
 # Sound File Definitions & Thresholds
 SOUNDS = {

@@ -10,6 +10,9 @@ import numpy as np
 import sounddevice as sd
 import requests
 
+# Sound Detector Script
+# v1.08.8
+
 load_dotenv()
 FIRST_DISCORD_WEBHOOK_URL = os.getenv("NOTIFY_USER_URL")
 SECOND_DISCORD_WEBHOOK_URL = os.getenv("VOLUME_REPORT_URL")
