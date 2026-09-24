@@ -148,6 +148,10 @@ Some common exceptions you may run into are:
 * Location of Exception: Module imports on Ln 5, 6, 7, 8
 * Fix: Make sure you have all 4 third-party packages installed. Head back to ## Package Installation for more info  
 
+## Running the Script
+
+You can use any lightweight, free code editors in order to run this script.   
+You can use VS Code (Visual Studio Code), PyCharm, Fork, etc.
 ## Developer Notes
 
 Made with love by @Crystallization (@crystallizationn)  
