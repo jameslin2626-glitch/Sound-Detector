@@ -47,7 +47,7 @@ def date_report():  # DD/MM/YY
     elif hour == 0:
         hour = 12
 
-    return f"{now.strftime("%d-%m-%Y")} {hour}:{now.strftime("%M:%S")}{meridiem}"
+    return f"[{now.strftime('%d-%m-%Y')} {hour}:{now.strftime('%M:%S')}{meridiem}]"
 
 
 def time_report():
@@ -66,7 +66,7 @@ def time_report():
     elif hour == 0:
         hour = 12
 
-    return f"{hour}:{now.strftime('%M:%S')} {meridiem}"
+    return f"[{hour}:{now.strftime('%M:%S')} {meridiem}]"
 
 
 def find_audio_device():
@@ -121,7 +121,7 @@ def send_discord_ping(text):
         return
 
     data = {
-        "content": f"<@{FIRST_USER_ID}> ***Sound Detected***",
+        "content": f"<@{FIRST_USER_ID}> ***Sound Detected***\n{date_report()}",
         "embeds": [{"description": f"{text}", "color": 0x5865F2}],
         "allowed_mentions": {"parse": ["users"]},
     }
@@ -199,7 +199,6 @@ def audio_callback(indata, frames, time_info, status):
             delete_time = int(current_time) + NOTIF_AUTO_DELETE_DURATION
 
             send_discord_ping(
-                f"[{date_report()}]\n"
                 "***A sound was detected!***\n"
                 f"Threshold: {NOISE_THRESHOLD}\n"
                 f"Live Volume: ***{volume_norm:.3f}***\n"
