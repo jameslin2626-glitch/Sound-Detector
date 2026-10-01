@@ -2,7 +2,6 @@ import os
 import sys
 import threading
 import time
-import pytz
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
@@ -11,68 +10,57 @@ import sounddevice as sd
 import requests
 
 # Sound Detector Script
-# v1.08.8
+# v1.09.2
 
 load_dotenv()
+
+# Discord Webhook URL(s) & User ID(s) for sending notifications to the user
 FIRST_DISCORD_WEBHOOK_URL = os.getenv("NOTIFY_USER_URL")
 SECOND_DISCORD_WEBHOOK_URL = os.getenv("VOLUME_REPORT_URL")
 FIRST_USER_ID = os.getenv("FIRST_USER_ID")
 
-PING_COOLDOWN = 5
-NOTIF_AUTO_DELETE_DURATION = 60
-VOLUME_AUTO_DELETE_DURATION = 20
+PING_COOLDOWN = 5  # seconds
+NOTIF_AUTO_DELETE_DURATION = 60  # seconds
+VOLUME_AUTO_DELETE_DURATION = 20  # seconds
 
-HERTZ_RATE = 44100
-NOISE_THRESHOLD = 0.1
-NOISE_FLOOR = 0.01
+HERTZ_RATE = 44100  # sample_rate in Hz
+NOISE_THRESHOLD = 0.1  # volume threshold for sending a Discord ping
+NOISE_FLOOR = 0.01  # minimum volume level to consider
 
-current_date_nyc_tz = ZoneInfo("America/New_York")
-current_time_nyc_tz = pytz.timezone("America/New_York")
+current_nyc_tz = ZoneInfo("America/New_York")
+active_messages = []  # Tracks messages as tuples of (webhook_url, message_id)
+messages_lock = threading.Lock()
 
 
-def date_report():  # DD/MM/YY
+def date_report():
     """
-    Reports the current date of NYC/America in 12-hour format.
-    DD/MM/YY
+    Reports current date/time in NYC timezone.
+    
+    Returns:
+        str: DD/MM/YYYY HH:MM:SS AM/PM format
     """
-    now = datetime.now(current_date_nyc_tz)
-
-    hour = now.hour
-    meridiem = "AM"
-
-    if hour >= 12:
-        meridiem = "PM"
-        if hour > 12:
-            hour -= 12
-    elif hour == 0:
-        hour = 12
-
-    return f"[{now.strftime('%d-%m-%Y')} {hour}:{now.strftime('%M:%S')}{meridiem}]"
+    now = datetime.now(current_nyc_tz)
+    return now.strftime("[%d-%m-%Y %I:%M:%S%p]")
 
 
 def time_report():
     """
-    Reports the current time of NYC/America in 12-hour format.
+    Reports current time in NYC timezone.
+
+    Returns:
+        str: HH:MM:SS AM/PM format
     """
-    now = datetime.now(current_time_nyc_tz)
-
-    hour = now.hour
-    meridiem = "AM"
-
-    if hour >= 12:
-        meridiem = "PM"
-        if hour > 12:
-            hour -= 12
-    elif hour == 0:
-        hour = 12
-
-    return f"[{hour}:{now.strftime('%M:%S')} {meridiem}]"
+    now = datetime.now(current_nyc_tz)
+    return now.strftime("[%I:%M:%S %p]")
 
 
 def find_audio_device():
     """
     Finds the currently selected output device the user is using
     to detect device audio.
+    
+    Returns:
+        tuple: (device_index, input_channels)
     """
     try:
         devices = sd.query_devices()
@@ -107,15 +95,26 @@ def auto_delete_msg(webhook_url, msg_id, delay):
     """
     if not webhook_url or not msg_id:
         return
+    
+    with messages_lock:
+        active_messages.append((webhook_url, msg_id))
+        
     time.sleep(delay)
-    delete_url = f"{webhook_url}/messages/{msg_id}"
-    requests.delete(delete_url)
+    
+    try:
+        requests.delete(f"{webhook_url}/messages/{msg_id}", timeout=5)
+    except requests.RequestException:
+        pass
+    finally:
+        with messages_lock:
+            if (webhook_url, msg_id) in active_messages:
+                active_messages.remove((webhook_url, msg_id))
 
 
 def send_discord_ping(text):
     """
     Send a Discord mention to the User ID to their connected webhook, 
-    notifying them about a detected sound's presence.
+    notifying them about the detected sound's presence.
     """
     if not FIRST_DISCORD_WEBHOOK_URL:
         return
@@ -143,7 +142,8 @@ def send_discord_ping(text):
 
 def send_volume_report(volume):
     """
-    Send a message to another connected webhook, displaying the Live Volume output.
+    Send a message to another connected webhook, 
+    displaying the Live Volume output.
     """
     if not SECOND_DISCORD_WEBHOOK_URL:
         return
@@ -207,13 +207,18 @@ def audio_callback(indata, frames, time_info, status):
             last_ping_time = current_time
 
 
-print(f"Listening for device audio on device index {DEVICE_INDEX}...", flush=True)
-with sd.InputStream(
-    device=DEVICE_INDEX,
-    callback=audio_callback,
-    channels=INPUT_CHANNELS,
-    samplerate=HERTZ_RATE,
-):
-    while True:
-        time.sleep(1)
- 
+print(f"Listening on device index {DEVICE_INDEX} "
+      f"(Channels: {INPUT_CHANNELS} | Sample Rate: {HERTZ_RATE}Hz)")
+print(f"Noise Threshold: {NOISE_THRESHOLD} | Ping Cooldown: {PING_COOLDOWN}s")
+
+try:
+    with sd.InputStream(
+        device=DEVICE_INDEX,
+        callback=audio_callback,
+        channels=INPUT_CHANNELS,
+        samplerate=HERTZ_RATE,
+    ):
+        while True:
+            time.sleep(1)
+except KeyboardInterrupt:
+    print("\nExiting...")
