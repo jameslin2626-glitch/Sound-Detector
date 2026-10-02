@@ -26,9 +26,11 @@ VOLUME_AUTO_DELETE_DURATION = 20  # seconds
 HERTZ_RATE = 44100  # sample_rate in Hz
 NOISE_THRESHOLD = 0.1  # volume threshold for sending a Discord ping
 NOISE_FLOOR = 0.01  # minimum volume level to consider
+VOLUME_REPORT_COOLDOWN = 2.0  # seconds between sending volume reports to Discord
 
+last_volume_report_time = 0
 current_nyc_tz = ZoneInfo("America/New_York")
-active_messages = []  # Tracks messages as tuples of (webhook_url, message_id)
+active_messages = []  # tracks messages as tuples of (webhook_url, message_id)
 messages_lock = threading.Lock()
 
 
@@ -179,25 +181,25 @@ def audio_callback(indata, frames, time_info, status):
     Sends a Discord notification if live volume exceeds the threshold and the
     cooldown period has elapsed.
     """
-    global last_ping_time
-
+    global last_ping_time, last_volume_report_time
+    current_time = time.time()
+    
     volume_norm = float(np.sqrt(np.mean(indata**2)))
 
     if volume_norm > NOISE_FLOOR:
         print(f"Volume: {volume_norm:.3f}")
 
-        if volume_norm > NOISE_THRESHOLD:
-            send_volume_report(f"***{volume_norm:.3f}***")
-        else:
-            send_volume_report(f"{volume_norm:.3f}")
+        if current_time - last_volume_report_time > VOLUME_REPORT_COOLDOWN:
+            if volume_norm > NOISE_THRESHOLD:
+                send_volume_report(f"***{volume_norm:.3f}***")
+            else:
+                send_volume_report(f"{volume_norm:.3f}")
+            last_volume_report_time = current_time
 
-    current_time = time.time()
     if volume_norm > NOISE_THRESHOLD:
         if current_time - last_ping_time > PING_COOLDOWN:
             print(f"*** Noise Detected! Volume Level: {volume_norm:.3f} ***")
-
             delete_time = int(current_time) + NOTIF_AUTO_DELETE_DURATION
-
             send_discord_ping(
                 "***A sound was detected!***\n"
                 f"Threshold: {NOISE_THRESHOLD}\n"
