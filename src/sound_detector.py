@@ -218,7 +218,7 @@ try:
         device=DEVICE_INDEX,
         callback=audio_callback,
         channels=INPUT_CHANNELS,
-        samplerate=HERTZ_RATE,
+        samplerate=HERTZ_RATE,  # 44100 Hz is standard for audio
     ):
         while True:
             time.sleep(1)
