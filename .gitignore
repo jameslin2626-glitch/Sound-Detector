@@ -182,4 +182,3 @@ cython_debug/
 .DS_Store
 .idea/
 *.idea
-src/
