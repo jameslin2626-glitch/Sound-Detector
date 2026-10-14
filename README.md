@@ -1,7 +1,7 @@
 # Sound Notification Bot (`sound-detector.py`)
 
 Sound Detector Script  
-v1.09.3
+v1.0.0
 
 Sound Notification Bot is a bot that is connected to a Discord Webhook URL.  
 
@@ -66,24 +66,23 @@ is a lot smoother and way easier to set up.
 
 ## Package Installation
 
-The script uses 5 third-party Python packages to function correctly.  
+The script uses 4 third-party Python packages to function correctly.  
 You need to install the following third-party Python packages:  
 * requests  
 * numpy  
 * sounddevice  
 * python-dotenv  
-* pytz
 
 Run this command in your Terminal:  
-* pip install numpy requests sounddevice python-dotenv pytz  
+* pip install numpy requests sounddevice python-dotenv    
 
 On macOS / Linux, standard system Python often requires pip3 instead of pip. If you hit an  
 externally-managed-environment error, use a virtual environment, or run this command in your Terminal:  
-* python3 -m pip install numpy requests sounddevice python-dotenv pytz  
+* python3 -m pip install numpy requests sounddevice python-dotenv    
 
 If you use Windows, and run into permission errors when installing globally,  
 open Command Prompt as Administrator, or run this command in your Terminal:  
-* py -m pip install numpy requests sounddevice python-dotenv pytz  
+* py -m pip install numpy requests sounddevice python-dotenv  
 
 OPTIONAL:
 * pip install -r requirements.txt
