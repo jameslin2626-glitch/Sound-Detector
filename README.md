@@ -1,7 +1,7 @@
 # Sound Notification Bot (`sound-detector.py`)
 
 Sound Detector Script  
-v1.0.0
+v1.10
 
 Sound Notification Bot is a bot that is connected to a Discord Webhook URL.  
 
@@ -149,8 +149,8 @@ Some common exceptions you may run into are:
 
 ## Running the Script
 
-You can use any lightweight, free code editors in order to run this script.   
-You can use VS Code (Visual Studio Code), PyCharm, Fork, etc.
+You can use any lightweight, free code editors in order to run this script,  
+such as VS Code (Visual Studio Code), PyCharm, Fork, etc.
 
 ## Developer Notes
 
