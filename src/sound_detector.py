@@ -5,14 +5,26 @@ import time
 import numpy as np
 import sounddevice as sd
 import requests
+from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 
 # Sound Detector Script
-# v1.0.0
+# v1.1.0
 
-load_dotenv()
+def get_env_path():
+    """
+    Dynamically resolve the path to the .env file.
+    Works for both standard Python execution and PyInstaller bundling.
+    """
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        return Path(sys._MEIPASS) / '.env'
+    else:
+        return Path(__file__).resolve().parent / '.env'
+
+env_path = get_env_path()
+load_dotenv(dotenv_path=env_path)
 
 # Discord Webhook URL(s) & User ID(s) for sending notifications to the user
 FIRST_DISCORD_WEBHOOK_URL = os.getenv("NOTIFY_USER_URL")
@@ -85,6 +97,8 @@ def find_audio_device():
             "cable" in name
             or "stereo mix" in name
             or "what u hear" in name
+            or "loopback" in name
+            or "blackhole" in name
         ):
             return i, dev["max_input_channels"]
 
@@ -272,4 +286,3 @@ try:
             time.sleep(1)
 except KeyboardInterrupt:
     print("\nExiting...")
-
