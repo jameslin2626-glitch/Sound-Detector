@@ -280,7 +280,7 @@ def audio_callback(
     indata: np.ndarray,
     frames: int,
     time_info: Any,
-    status: sd.Status,
+    status: Any,
 ):
     """
     Process incoming audio and report significant volume levels.
