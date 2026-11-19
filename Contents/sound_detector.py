@@ -5,6 +5,7 @@ import time
 import numpy as np
 import sounddevice as sd
 import requests
+from typing import Any
 from pathlib import Path
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
@@ -278,7 +279,7 @@ def send_volume_report(volume: float):
 def audio_callback(
     indata: np.ndarray,
     frames: int,
-    time_info: sd.TimeInfo,
+    time_info: Any,
     status: sd.Status,
 ):
     """
