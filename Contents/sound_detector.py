@@ -6,12 +6,12 @@ import numpy as np
 import sounddevice as sd
 import requests
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 
 # Sound Detector Script
-# v1.0.0
+# v1.0.2
 
 def get_env_path():
     """
@@ -24,7 +24,6 @@ def get_env_path():
 env_path = get_env_path()
 load_dotenv(dotenv_path=env_path)
 
-# Discord Webhook URL(s) & User ID(s) for sending notifications to the user
 FIRST_DISCORD_WEBHOOK_URL = os.getenv("NOTIFY_USER_URL")
 SECOND_DISCORD_WEBHOOK_URL = os.getenv("VOLUME_REPORT_URL")
 FIRST_USER_ID = os.getenv("FIRST_USER_ID")
@@ -33,16 +32,27 @@ PING_COOLDOWN = 5  # seconds
 NOTIF_AUTO_DELETE_DURATION = 60  # seconds
 VOLUME_AUTO_DELETE_DURATION = 20  # seconds
 
-HERTZ_RATE = 44100  # sample_rate in Hz
-NOISE_THRESHOLD = 0.1  # volume threshold for sending a Discord ping
+HERTZ_RATE = 44100  # later customizable by user during an input session
+NOISE_THRESHOLD = 0.1  # later customizable by user during an input session
 NOISE_FLOOR = 0.01  # minimum volume level to consider
-VOLUME_REPORT_COOLDOWN = 2.0  # seconds between sending volume reports to Discord
+VOLUME_REPORT_COOLDOWN = 2.0
 
 last_volume_report_time = 0
 current_nyc_tz = ZoneInfo("America/New_York")
-active_messages = []  # tracks messages as tuples of (webhook_url, message_id)
+active_messages = []
 messages_lock = threading.Lock()
 
+while True:
+    try:
+        NOISE_THRESHOLD = float(input(f"What noise threshold would you like to consider? (default {NOISE_THRESHOLD}) "))
+        HERTZ_RATE = int(input(f"What Hz rate would you like to consider? (default {HERTZ_RATE}Hz) "))
+        print()
+        break
+    except ValueError:
+        print("[ERROR] Not a valid number to consider.\n")
+        NOISE_THRESHOLD = 0.1
+        HERTZ_RATE = 44100
+        
 
 def date_report():
     """
@@ -144,7 +154,7 @@ def auto_delete_msg(webhook_url: str, msg_id: str, delay: int):
                 active_messages.remove((webhook_url, msg_id))
 
 
-def send_discord_ping(text: str):
+def send_discord_ping(volume: float, delete_time: int):
     """
     Send a Discord notification when a sound exceeds the threshold.
 
@@ -153,17 +163,44 @@ def send_discord_ping(text: str):
     automatically scheduled for deletion.
 
     Args:
-        text (str): Additional information to include in the
-            sound-detection notification.
+        volume (float): Current normalized audio volume level.
+        delete_time (int): Time it takes for a message to auto-delete.
     """
     if not FIRST_DISCORD_WEBHOOK_URL:
         return
+    
+    over_pct = round(((volume - NOISE_THRESHOLD) / NOISE_THRESHOLD) * 100)
+    
+    embed = {
+        "title": "Audio Threshold Exceeded",
+        "color": 0x5865F2,  # Blurple
+        "fields": [
+            {
+                "name": "Metric",
+                "value": "Live Volume\nThreshold",
+                "inline": True,
+            },
+            {
+                "name": "Value",
+                "value": f"**{volume:.3f}\n{NOISE_THRESHOLD}**",
+                "inline": True,
+            },
+            {
+                "name": "Status",
+                "value": f"**{over_pct}%** over Threshold\nDeletes <t:{delete_time}:R>",
+                "inline": True,
+            },
+        ],
+        "footer": {"text": f"Sample Rate: {HERTZ_RATE}Hz - Cooldown: {PING_COOLDOWN}s"},
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
 
     data = {
-        "content": f"<@{FIRST_USER_ID}> ***Sound Detected***\n{date_report()}",
-        "embeds": [{"description": f"{text}", "color": 0x5865F2}],
+        "content": f"**Sound Detected - <@{FIRST_USER_ID}>**",
+        "embeds": [embed],
         "allowed_mentions": {"parse": ["users"]},
     }
+
     response = requests.post(
         f"{FIRST_DISCORD_WEBHOOK_URL}?wait=true", json=data
     )
@@ -194,12 +231,33 @@ def send_volume_report(volume: float):
         return
 
     delete_time = int(time.time()) + VOLUME_AUTO_DELETE_DURATION
-    desc = (
-        f"<@{FIRST_USER_ID}>\nLive Volume: {volume}\n"
-        f"-# Deletes <t:{delete_time}:R>"
-    )
-    embed = {"description": desc, "color": 0x57F287}
-    data = {"embeds": [embed]}
+    status = "Loud" if volume > NOISE_THRESHOLD else "Normal"
+
+    embed = {
+        "title": f"**Live Volume Report**",
+        "description": f"<@{FIRST_USER_ID}>",
+        "color": 0x57F287,  # Bright green
+        "fields": [
+            {"name": "Metric", "value": "Volume\nFloor", "inline": True},
+            {
+                "name": "Level",
+                "value": f"**{volume:.3f}**\n{NOISE_FLOOR}",
+                "inline": True,
+            },
+            {
+                "name": "Status",
+                "value": f"{status}\nDeletes <t:{delete_time}:R>",
+                "inline": True,
+            },
+        ],
+        "footer": {"text": f"Sample Rate: {HERTZ_RATE}Hz"},
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+    data = {
+        "embeds": [embed],
+        "allowed_mentions": {"parse": ["users"]},
+    }
 
     response = requests.post(
         f"{SECOND_DISCORD_WEBHOOK_URL}?wait=true", json=data
@@ -250,24 +308,15 @@ def audio_callback(
         print(f"Volume: {volume_norm:.3f}")
 
         if current_time - last_volume_report_time > VOLUME_REPORT_COOLDOWN:
-            if volume_norm > NOISE_THRESHOLD:
-                send_volume_report(f"***{volume_norm:.3f}***")
-            else:
-                send_volume_report(f"{volume_norm:.3f}")
+            send_volume_report(volume_norm)
             last_volume_report_time = current_time
 
     if volume_norm > NOISE_THRESHOLD:
         if current_time - last_ping_time > PING_COOLDOWN:
             print(f"*** Noise Detected! Volume Level: {volume_norm:.3f} ***")
             delete_time = int(current_time) + NOTIF_AUTO_DELETE_DURATION
-            send_discord_ping(
-                "***A sound was detected!***\n"
-                f"Threshold: {NOISE_THRESHOLD}\n"
-                f"Live Volume: ***{volume_norm:.3f}***\n"
-                f"-# Deletes <t:{delete_time}:R>"
-            )
+            send_discord_ping(volume_norm, delete_time)
             last_ping_time = current_time
-
 
 print(f"Listening on device index {DEVICE_INDEX} "
       f"(Channels: {INPUT_CHANNELS} | Sample Rate: {HERTZ_RATE}Hz)")
