@@ -183,3 +183,4 @@ cython_debug/
 Linux/
 macOS/
 Windows/
+config.json
